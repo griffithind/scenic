@@ -1,0 +1,17 @@
+Description:
+  Create a new database function for your application. This will create a new
+  function definition file and the accompanying migration.
+
+  If a function of the given name already exists, create a new version of the function
+  and a migration to replace the old version with the new.
+
+Examples:
+    rails generate scenic:function get_active_users
+
+      create: db/functions/get_active_users_v01.sql
+      create: db/migrate/20140803191158_create_get_active_users.rb
+
+    rails generate scenic:function get_active_users
+
+      create: db/functions/get_active_users_v02.sql
+      create: db/migrate/20140804191158_update_get_active_users_to_version_2.rb

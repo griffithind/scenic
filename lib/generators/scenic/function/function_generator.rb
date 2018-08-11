@@ -5,19 +5,19 @@ require "generators/scenic/materializable"
 module Scenic
   module Generators
     # @api private
-    class ViewGenerator < Rails::Generators::NamedBase
+    class FunctionGenerator < Rails::Generators::NamedBase
       include Rails::Generators::Migration
       include Scenic::Generators::Materializable
       source_root File.expand_path("../templates", __FILE__)
 
-      def create_views_directory
-        unless views_directory_path.exist?
-          empty_directory(views_directory_path)
+      def create_functions_directory
+        unless functions_directory_path.exist?
+          empty_directory(functions_directory_path)
         end
       end
 
-      def create_view_definition
-        if creating_new_view?
+      def create_function_definition
+        if creating_new_function?
           create_file definition.path
         else
           copy_file previous_definition.full_path, definition.full_path
@@ -25,15 +25,15 @@ module Scenic
       end
 
       def create_migration_file
-        if creating_new_view? || destroying_initial_view?
+        if creating_new_function? || destroying_initial_function?
           migration_template(
-            "db/migrate/create_view.erb",
-            "db/migrate/create_#{plural_file_name}.rb",
+            "db/migrate/create_function.erb",
+            "db/migrate/create_#{file_name}.rb",
           )
         else
           migration_template(
-            "db/migrate/update_view.erb",
-            "db/migrate/update_#{plural_file_name}_to_version_#{version}.rb",
+            "db/migrate/update_function.erb",
+            "db/migrate/update_#{file_name}_to_version_#{version}.rb",
           )
         end
       end
@@ -55,10 +55,10 @@ module Scenic
         end
 
         def migration_class_name
-          if creating_new_view?
-            "Create#{class_name.gsub('.', '').pluralize}"
+          if creating_new_function?
+            "Create#{class_name.gsub('.', '')}"
           else
-            "Update#{class_name.pluralize}ToVersion#{version}"
+            "Update#{class_name}ToVersion#{version}"
           end
         end
 
@@ -73,48 +73,31 @@ module Scenic
 
       private
 
-      def views_directory_path
-        @views_directory_path ||= Rails.root.join(*%w(db views))
+      def functions_directory_path
+        @functions_directory_path ||= Rails.root.join(*%w(db functions))
       end
 
       def version_regex
-        /\A#{plural_file_name}_v(?<version>\d+)\.sql\z/
+        /\A#{file_name}_v(?<version>\d+)\.sql\z/
       end
 
-      def creating_new_view?
+      def creating_new_function?
         previous_version == 0
       end
 
       def definition
-        Scenic::Definition.new(plural_file_name, version, :view)
+        Scenic::Definition.new(plural_file_name, version, :function)
       end
 
       def previous_definition
-        Scenic::Definition.new(plural_file_name, previous_version, :view)
-      end
-
-      def plural_file_name
-        @plural_file_name ||= file_name.pluralize.gsub(".", "_")
+        Scenic::Definition.new(plural_file_name, previous_version, :function)
       end
 
       def destroying?
         behavior == :revoke
       end
 
-      def formatted_plural_name
-        if plural_name.include?(".")
-          "\"#{plural_name}\""
-        else
-          ":#{plural_name}"
-        end
-      end
-
-      def create_view_options
-        return "" unless materialized?
-        ", materialized: #{no_data? ? '{ no_data: true }' : true}"
-      end
-
-      def destroying_initial_view?
+      def destroying_initial_function?
         destroying? && version == 1
       end
     end

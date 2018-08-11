@@ -6,7 +6,7 @@ module Scenic
         @args = args.freeze
       end
 
-      def view
+      def object_name
         @args[0]
       end
 
@@ -19,7 +19,7 @@ module Scenic
       end
 
       def invert_version
-        StatementArguments.new([view, options_for_revert])
+        StatementArguments.new([object_name, options_for_revert])
       end
 
       def to_a

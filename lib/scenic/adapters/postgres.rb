@@ -3,6 +3,7 @@ require_relative "postgres/errors"
 require_relative "postgres/index_reapplication"
 require_relative "postgres/indexes"
 require_relative "postgres/views"
+require_relative "postgres/functions"
 require_relative "postgres/refresh_dependencies"
 
 module Scenic
@@ -47,6 +48,16 @@ module Scenic
       # @return [Array<Scenic::View>]
       def views
         Views.new(connection).all
+      end
+
+      # Returns an array of functions in the database.
+      #
+      # This collection of functions is used by the [Scenic::SchemaDumper] to
+      # populate the `schema.rb` file.
+      #
+      # @return [Array<Scenic::Function>]
+      def functions
+        Functions.new(connection).all
       end
 
       # Creates a view in the database.
@@ -218,6 +229,47 @@ module Scenic
         else
           execute "REFRESH MATERIALIZED VIEW #{quote_table_name(name)};"
         end
+      end
+
+      # Creates a function in the database.
+      #
+      # This is typically called in a migration via {Statements#create_function}.
+      #
+      # @param name The name of the function to create
+      # @param sql_definition The definition of the function.
+      #
+      # @return [void]
+      def create_function(name, sql_definition)
+        execute "{sql_definition};"
+      end
+
+      # Updates a function in the database.
+      #
+      # This results in a {#drop_function} followed by a {#create_function}. The
+      # explicitness of that two step process is preferred to `CREATE OR
+      # REPLACE FUNCTION` because the former ensures that the function you are trying to
+      # update did, in fact, already exist.
+      #
+      # This is typically called in a migration via {Statements#update_function}.
+      #
+      # @param name The name of the function to update
+      # @param sql_definition The definition the updated function.
+      #
+      # @return [void]
+      def update_function(name, sql_definition)
+        drop_function(name)
+        create_function(name, sql_definition)
+      end
+
+      # Drops the named function from the database
+      #
+      # This is typically called in a migration via {Statements#drop_function}.
+      #
+      # @param name The name of the function to drop
+      #
+      # @return [void]
+      def drop_function(name)
+        execute "DROP FUNCTION #{quote_table_name(name)};"
       end
 
       private

@@ -1,9 +1,10 @@
 module Scenic
   # @api private
   class Definition
-    def initialize(name, version)
+    def initialize(name, version, type=:view)
       @name = name
       @version = version.to_i
+      @type = type
     end
 
     def to_sql
@@ -19,7 +20,7 @@ module Scenic
     end
 
     def path
-      File.join("db", "views", filename)
+      File.join("db", directory_for_type, filename)
     end
 
     def version
@@ -27,6 +28,17 @@ module Scenic
     end
 
     private
+
+    def directory_for_type
+      case @type
+      when :view
+        "views"
+      when :function
+        "funtions"
+      else
+        raise "Unknow definition type #{@type}."
+      end
+    end
 
     def filename
       "#{@name}_v#{version}.sql"

@@ -6,6 +6,7 @@ module Scenic
     def tables(stream)
       super
       views(stream)
+      functions(stream)
     end
 
     def views(stream)
@@ -19,12 +20,22 @@ module Scenic
       end
     end
 
+    def functions(stream)
+      dumpable_functions_in_database.each do |function|
+        stream.puts(function.to_schema)
+      end
+    end
+
     private
 
     def dumpable_views_in_database
       @dumpable_views_in_database ||= Scenic.database.views.reject do |view|
         ignored?(view.name)
       end
+    end
+
+    def dumpable_functions_in_database
+      @dumpable_functions_in_database ||= Scenic.database.functions
     end
 
     unless ActiveRecord::SchemaDumper.private_instance_methods(false).include?(:ignored?)
