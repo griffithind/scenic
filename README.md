@@ -1,4 +1,4 @@
-## Extend Scenic with functions support.
+## Extend Scenic with support for functions.
 # Scenic
 
 ![Scenic Landscape](https://images.thoughtbot.com/announcing-scenic--versioned-database-views-for-rails/MRUcPsxrTGCeWKyE59Zg_landscape.png)
