@@ -38,6 +38,23 @@ module Scenic
         end
       end
 
+      describe "#create_function" do
+        it "successfully creates a function" do
+          adapter = Postgres.new
+
+          function_definition = <<~SQL
+          CREATE FUNCTION greetings()
+          RETURNS text as $$
+          SELECT text 'hi';
+          $$
+          LANGUAGE sql;
+          SQL
+
+          adapter.create_function("greetings", function_definition)
+          expect(adapter.functions.map(&:name)).to include("greetings")
+        end
+      end
+
       describe "#replace_view" do
         it "successfully replaces a view" do
           adapter = Postgres.new
@@ -86,6 +103,25 @@ module Scenic
 
           expect { adapter.drop_materialized_view("greetings") }
             .to raise_error err
+        end
+      end
+
+      describe "#drop_function" do
+        it "successfully drops a function" do
+          adapter = Postgres.new
+
+          function_definition = <<~SQL
+          CREATE FUNCTION greetings()
+          RETURNS text as $$
+          SELECT text 'hi';
+          $$
+          LANGUAGE sql;
+          SQL
+
+          adapter.create_function("greetings", function_definition)
+          adapter.drop_function("greetings")
+
+          expect(adapter.functions.map(&:name)).not_to include("greetings")
         end
       end
 
@@ -180,6 +216,62 @@ module Scenic
             expect(adapter.views.map(&:name)).to eq [
               "parents",
               "scenic.parents",
+            ]
+          end
+        end
+      end
+
+      describe "#functions" do
+        it "returns the functions defined on this connection" do
+          adapter = Postgres.new
+
+          ActiveRecord::Base.connection.execute <<-SQL
+          CREATE FUNCTION get_parent()
+          RETURNS text as $$
+          SELECT text 'joe';
+          $$
+          LANGUAGE sql;
+          SQL
+
+          ActiveRecord::Base.connection.execute <<-SQL
+          CREATE FUNCTION get_child()
+          RETURNS text as $$
+          SELECT text 'Owen';
+          $$
+          LANGUAGE sql;
+          SQL
+
+          expect(adapter.functions.map(&:name)).to eq [
+            "get_parent",
+            "get_child",
+          ]
+        end
+
+        context "with functions in non public schemas" do
+          it "returns also the non public functions" do
+            adapter = Postgres.new
+
+            ActiveRecord::Base.connection.execute <<-SQL
+              CREATE FUNCTION get_parent()
+              RETURNS text as $$
+              SELECT text 'joe';
+              $$
+              LANGUAGE sql;
+            SQL
+
+            ActiveRecord::Base.connection.execute <<-SQL
+              CREATE SCHEMA scenic;
+              CREATE FUNCTION scenic.get_parent()
+              RETURNS text as $$
+              SELECT text 'joe';
+              $$
+              LANGUAGE sql;
+              SET search_path TO scenic, public;
+            SQL
+
+            expect(adapter.functions.map(&:name)).to eq [
+              "get_parent",
+              "scenic.get_parent",
             ]
           end
         end

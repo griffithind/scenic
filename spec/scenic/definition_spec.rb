@@ -7,7 +7,7 @@ module Scenic
         sql_definition = "SELECT text 'Hi' as greeting"
         allow(File).to receive(:read).and_return(sql_definition)
 
-        definition = Definition.new("searches", 1)
+        definition = Definition.new("searches", 1, :view)
 
         expect(definition.to_sql).to eq sql_definition
       end
@@ -16,7 +16,7 @@ module Scenic
         allow(File).to receive(:read).and_return("")
 
         expect do
-          Definition.new("searches", 1).to_sql
+          Definition.new("searches", 1, :view).to_sql
         end.to raise_error RuntimeError
       end
     end
@@ -25,7 +25,15 @@ module Scenic
       it "returns a sql file in db/views with padded version and view name"  do
         expected = "db/views/searches_v01.sql"
 
-        definition = Definition.new("searches", 1)
+        definition = Definition.new("searches", 1, :view)
+
+        expect(definition.path).to eq expected
+      end
+
+      it "returns a sql file in db/functions with padded version and view name"  do
+        expected = "db/functions/get_user_v01.sql"
+
+        definition = Definition.new("get_user", 1, :function)
 
         expect(definition.path).to eq expected
       end
@@ -33,7 +41,7 @@ module Scenic
 
     describe "full_path" do
       it "joins the path with Rails.root" do
-        definition = Definition.new("searches", 15)
+        definition = Definition.new("searches", 15, :view)
 
         expect(definition.full_path).to eq Rails.root.join(definition.path)
       end
@@ -41,13 +49,13 @@ module Scenic
 
     describe "version" do
       it "pads the version number with 0" do
-        definition = Definition.new(:_, 1)
+        definition = Definition.new(:_, 1, :view)
 
         expect(definition.version).to eq "01"
       end
 
       it "doesn't pad more than 2 characters" do
-        definition = Definition.new(:_, 15)
+        definition = Definition.new(:_, 15, :view)
 
         expect(definition.version).to eq "15"
       end

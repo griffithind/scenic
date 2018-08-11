@@ -6,6 +6,7 @@ module Scenic
   #
   # * {file:lib/generators/scenic/model/USAGE Model Generator}
   # * {file:lib/generators/scenic/view/USAGE View Generator}
+  # * {file:lib/generators/scenic/function/USAGE Function Generator}
   # * {file:README.md README}
   module Generators
   end

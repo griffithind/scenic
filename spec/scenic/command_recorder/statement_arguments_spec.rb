@@ -7,7 +7,7 @@ module Scenic::CommandRecorder
         raw_args = [:spaceships, { foo: :bar }]
         args = StatementArguments.new(raw_args)
 
-        expect(args.view).to eq :spaceships
+        expect(args.object_name).to eq :spaceships
       end
     end
 

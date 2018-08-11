@@ -46,7 +46,7 @@ module Scenic
           end
 
           Scenic::Function.new(
-            name: namespaced_funtionname,
+            name: namespaced_functionname,
             definition: result["definition"].strip,
           )
         end

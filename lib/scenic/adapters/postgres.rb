@@ -240,7 +240,7 @@ module Scenic
       #
       # @return [void]
       def create_function(name, sql_definition)
-        execute "{sql_definition};"
+        execute "#{sql_definition};"
       end
 
       # Updates a function in the database.

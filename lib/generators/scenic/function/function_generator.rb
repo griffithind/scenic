@@ -1,13 +1,10 @@
 require "rails/generators"
 require "rails/generators/active_record"
-require "generators/scenic/materializable"
-
 module Scenic
   module Generators
     # @api private
     class FunctionGenerator < Rails::Generators::NamedBase
       include Rails::Generators::Migration
-      include Scenic::Generators::Materializable
       source_root File.expand_path("../templates", __FILE__)
 
       def create_functions_directory
@@ -28,12 +25,12 @@ module Scenic
         if creating_new_function? || destroying_initial_function?
           migration_template(
             "db/migrate/create_function.erb",
-            "db/migrate/create_#{file_name}.rb",
+            "db/migrate/create_#{function_name}.rb",
           )
         else
           migration_template(
             "db/migrate/update_function.erb",
-            "db/migrate/update_#{file_name}_to_version_#{version}.rb",
+            "db/migrate/update_#{function_name}_to_version_#{version}.rb",
           )
         end
       end
@@ -45,7 +42,7 @@ module Scenic
       no_tasks do
         def previous_version
           @previous_version ||=
-            Dir.entries(views_directory_path)
+            Dir.entries(functions_directory_path)
               .map { |name| version_regex.match(name).try(:[], "version").to_i }
               .max
         end
@@ -71,14 +68,26 @@ module Scenic
         end
       end
 
+      def function_name
+        @function_name ||= file_name.gsub('.', '_')
+      end
+
       private
 
       def functions_directory_path
         @functions_directory_path ||= Rails.root.join(*%w(db functions))
       end
 
+      def formatted_name
+        if function_name.include?(".")
+          "\"#{function_name}\""
+        else
+          ":#{function_name}"
+        end
+      end
+
       def version_regex
-        /\A#{file_name}_v(?<version>\d+)\.sql\z/
+        /\A#{function_name}_v(?<version>\d+)\.sql\z/
       end
 
       def creating_new_function?
@@ -86,11 +95,11 @@ module Scenic
       end
 
       def definition
-        Scenic::Definition.new(plural_file_name, version, :function)
+        Scenic::Definition.new(function_name, version, :function)
       end
 
       def previous_definition
-        Scenic::Definition.new(plural_file_name, previous_version, :function)
+        Scenic::Definition.new(function_name, previous_version, :function)
       end
 
       def destroying?

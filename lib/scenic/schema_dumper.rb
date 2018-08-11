@@ -1,5 +1,5 @@
 require "rails"
-
+require_relative "function"
 module Scenic
   # @api private
   module SchemaDumper

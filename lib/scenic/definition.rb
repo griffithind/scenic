@@ -1,7 +1,7 @@
 module Scenic
   # @api private
   class Definition
-    def initialize(name, version, type=:view)
+    def initialize(name, version, type)
       @name = name
       @version = version.to_i
       @type = type
@@ -34,7 +34,7 @@ module Scenic
       when :view
         "views"
       when :function
-        "funtions"
+        "functions"
       else
         raise "Unknow definition type #{@type}."
       end

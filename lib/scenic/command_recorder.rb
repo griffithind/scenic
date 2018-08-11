@@ -44,7 +44,7 @@ module Scenic
     end
 
     def update_function(*args)
-      record(:update_functio, args)
+      record(:update_function, args)
     end
 
     def invert_create_function(args)

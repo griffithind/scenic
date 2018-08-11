@@ -12,7 +12,7 @@ module Scenic
         version = 15
         definition_stub = instance_double("Definition", to_sql: "foo")
         allow(Definition).to receive(:new)
-          .with(:views, version)
+          .with(:views, version, :view)
           .and_return(definition_stub)
 
         connection.create_view :views, version: version
@@ -34,7 +34,7 @@ module Scenic
         version = 1
         definition_stub = instance_double("Definition", to_sql: "foo")
         allow(Definition).to receive(:new).
-          with(:views, version).
+          with(:views, version, :view).
           and_return(definition_stub)
 
         connection.create_view :views
@@ -98,7 +98,7 @@ module Scenic
       it "updates the view in the database" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new)
-          .with(:name, 3)
+          .with(:name, 3, :view)
           .and_return(definition)
 
         connection.update_view(:name, version: 3)
@@ -119,7 +119,7 @@ module Scenic
       it "updates the materialized view in the database" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new)
-          .with(:name, 3)
+          .with(:name, 3, :view)
           .and_return(definition)
 
         connection.update_view(:name, version: 3, materialized: true)
@@ -131,7 +131,7 @@ module Scenic
       it "updates the materialized view in the database with NO DATA" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new).
-          with(:name, 3).
+          with(:name, 3, :view).
           and_return(definition)
 
         connection.update_view(
@@ -164,7 +164,7 @@ module Scenic
       it "replaces the view in the database" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new)
-          .with(:name, 3)
+          .with(:name, 3, :view)
           .and_return(definition)
 
         connection.replace_view(:name, version: 3)
@@ -176,7 +176,7 @@ module Scenic
       it "fails to replace the materialized view in the database" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new)
-          .with(:name, 3)
+          .with(:name, 3, :view)
           .and_return(definition)
 
         expect do
@@ -187,6 +187,96 @@ module Scenic
       it "raises an error if not supplied a version" do
         expect { connection.replace_view :views }
           .to raise_error(ArgumentError, /version is required/)
+      end
+    end
+
+
+    describe "create_function" do
+      it "creates a function from a file" do
+        version = 15
+        definition_stub = instance_double("Definition", to_sql: "foo")
+        allow(Definition).to receive(:new)
+          .with(:functions, version, :function)
+          .and_return(definition_stub)
+
+        connection.create_function :functions, version: version
+
+        expect(Scenic.database).to have_received(:create_function)
+          .with(:functions, definition_stub.to_sql)
+      end
+
+      it "creates a function from a text definition" do
+        sql_definition = "a defintion"
+
+        connection.create_function(:functions, sql_definition: sql_definition)
+
+        expect(Scenic.database).to have_received(:create_function)
+          .with(:functions, sql_definition)
+      end
+
+      it "creates version 1 of the function if neither version nor sql_defintion are provided" do
+        version = 1
+        definition_stub = instance_double("Definition", to_sql: "foo")
+        allow(Definition).to receive(:new).
+          with(:functions, version, :function).
+          and_return(definition_stub)
+
+        connection.create_function :functions
+
+        expect(Scenic.database).to have_received(:create_function).
+          with(:functions, definition_stub.to_sql)
+      end
+
+      it "raises an error if both version and sql_defintion are provided" do
+        expect do
+          connection.create_function :foo, version: 1, sql_definition: "a defintion"
+        end.to raise_error ArgumentError
+      end
+    end
+
+    describe "drop_function" do
+      it "removes a function from the database" do
+        connection.drop_function :name
+
+        expect(Scenic.database).to have_received(:drop_function).with(:name)
+      end
+    end
+
+    describe "update_function" do
+      it "updates the function in the database" do
+        definition = instance_double("Definition", to_sql: "definition")
+        allow(Definition).to receive(:new)
+          .with(:name, 3, :function)
+          .and_return(definition)
+
+        connection.update_function(:name, version: 3)
+
+        expect(Scenic.database).to have_received(:update_function)
+          .with(:name, definition.to_sql)
+      end
+
+      it "updates a function from a text definition" do
+        sql_definition = "a defintion"
+
+        connection.update_function(:name, sql_definition: sql_definition)
+
+        expect(Scenic.database).to have_received(:update_function).
+          with(:name, sql_definition)
+      end
+
+      it "raises an error if not supplied a version or sql_defintion" do
+        expect { connection.update_function :functions }.to raise_error(
+          ArgumentError,
+          /sql_definition or version must be specified/)
+      end
+
+      it "raises an error if both version and sql_defintion are provided" do
+        expect do
+          connection.update_function(
+            :functions,
+            version: 1,
+            sql_definition: "a defintion")
+        end.to raise_error ArgumentError, /cannot both be set/
       end
     end
 
