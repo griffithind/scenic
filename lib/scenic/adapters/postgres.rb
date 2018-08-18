@@ -269,17 +269,16 @@ module Scenic
       #
       # @return [void]
       def drop_function(name)
-        if name.includes?('.')
-          args = name.split('.')
+        if name.to_s.include?('.')
+          args = name.to_s.split('.')
           domain = args[0]
           proname = args[1]
         else
           domain = 'public'
-          proname = name
+          proname = name.to_s
         end
 
         sql = <<~SQL
-        EXEC SQL EXECUTE IMMEDIATE (
           SELECT format('DROP %s %s;'
                       , CASE WHEN pp.proisagg THEN 'AGGREGATE' ELSE 'FUNCTION' END
                       , pp.oid::regprocedure
@@ -294,9 +293,10 @@ module Scenic
             AND  pp.proname = '#{proname}'
             AND    pn.nspname = '#{domain}'
           LIMIT 1
-          );
+          ;
         SQL
-        execute sql
+        statement = execute(sql)[0]['stmt']
+        execute statement
       end
 
       private
