@@ -269,7 +269,34 @@ module Scenic
       #
       # @return [void]
       def drop_function(name)
-        execute "DROP FUNCTION #{name};"
+        if name.includes?('.')
+          args = name.split('.')
+          domain = args[0]
+          proname = args[1]
+        else
+          domain = 'public'
+          proname = name
+        end
+
+        sql = <<~SQL
+        EXEC SQL EXECUTE IMMEDIATE (
+          SELECT format('DROP %s %s;'
+                      , CASE WHEN pp.proisagg THEN 'AGGREGATE' ELSE 'FUNCTION' END
+                      , pp.oid::regprocedure
+                       ) AS stmt
+          FROM pg_proc pp
+            LEFT JOIN pg_namespace pn ON pp.pronamespace = pn.oid
+            LEFT JOIN pg_language pl ON pp.prolang = pl.oid
+          WHERE
+            pl.lanname IN ('sql','plpgsql')
+            AND pn.nspname NOT LIKE 'pg_%'
+            AND pn.nspname <> 'information_schema'
+            AND  pp.proname = '#{proname}'
+            AND    pn.nspname = '#{domain}'
+          LIMIT 1
+          );
+        SQL
+        execute sql
       end
 
       private
