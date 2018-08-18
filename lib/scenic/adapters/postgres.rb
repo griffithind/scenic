@@ -269,7 +269,7 @@ module Scenic
       #
       # @return [void]
       def drop_function(name)
-        execute "DROP FUNCTION #{quote_table_name(name)};"
+        execute "DROP FUNCTION #{name};"
       end
 
       private
