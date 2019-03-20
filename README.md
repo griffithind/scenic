@@ -1,11 +1,11 @@
 ## Extend Scenic with support for functions.
 # Scenic
 
-![Scenic Landscape](https://images.thoughtbot.com/announcing-scenic--versioned-database-views-for-rails/MRUcPsxrTGCeWKyE59Zg_landscape.png)
+![Scenic Landscape](https://user-images.githubusercontent.com/152152/49344534-a8817480-f646-11e8-8431-3d95d349c070.png)
 
-[![Build Status](https://travis-ci.org/thoughtbot/scenic.svg)](https://travis-ci.org/thoughtbot/scenic)
-[![Code Climate](https://codeclimate.com/repos/53c9736269568066a3000c35/badges/85aa9b19f3037252c55d/gpa.svg)](https://codeclimate.com/repos/53c9736269568066a3000c35/feed)
-[![Documentation Quality](http://inch-ci.org/github/thoughtbot/scenic.svg?branch=master)](http://inch-ci.org/github/thoughtbot/scenic)
+[![Build Status](https://travis-ci.org/scenic-views/scenic.svg?branch=master)](https://travis-ci.org/scenic-views/scenic)
+[![Documentation Quality](http://inch-ci.org/github/scenic-views/scenic.svg?branch=master)](http://inch-ci.org/github/scenic-views/scenic)
+[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 
 Scenic adds methods to `ActiveRecord::Migration` to create and manage database
 views in Rails.
@@ -21,6 +21,12 @@ the database console during development.
 Scenic ships with support for PostgreSQL. The adapter is configurable (see
 `Scenic::Configuration`) and has a minimal interface (see
 `Scenic::Adapters::Postgres`) that other gems can provide.
+
+## So how do I install this?
+
+If you're using Postgres, Add `gem "scenic"` to your Gemfile and run `bundle
+install`. If you're using something other than Postgres, check out the available
+[third party adapters](https://github.com/scenic-views/scenic#faqs).
 
 ## Great, how do I create a view?
 
@@ -250,20 +256,12 @@ meet your needs:
 * [scenic_sqlite_adapter](https://github.com/pdebelak/scenic_sqlite_adapter)
 * [scenic-mysql_adapter](https://github.com/EmpaticoOrg/scenic-mysql_adapter)
 * [scenic-sqlserver-adapter](https://github.com/ClickMechanic/scenic_sqlserver_adapter)
+* [scenic-oracle_enhanced_adapter](https://github.com/PMACS/scenic_oracle_enhanced_adapter)
 
 ## About
 
-Scenic is maintained by [Derek Prior] and [Caleb Thompson], funded by
-thoughtbot, inc. The names and logos for thoughtbot are trademarks of
-thoughtbot, inc.
+Scenic is maintained by [Derek Prior], [Caleb Thompson], and you, our
+contributors.
 
 [Derek Prior]: http://prioritized.net
 [Caleb Thompson]: http://calebthompson.io
-
-![thoughtbot](http://presskit.thoughtbot.com/images/thoughtbot-logo-for-readmes.svg)
-
-We love open source software!  See [our other projects][community] or [hire
-us][hire] to help build your product.
-
-[community]: https://thoughtbot.com/community?utm_source=github
-[hire]: https://thoughtbot.com/hire-us?utm_source=github
