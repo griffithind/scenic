@@ -282,7 +282,10 @@ module Scenic
 
         sql = <<~SQL
           SELECT format('DROP %s %s;'
-                      , CASE WHEN pp.proisagg THEN 'AGGREGATE' ELSE 'FUNCTION' END
+                      , CASE pp.prokind 
+						WHEN 'a' THEN 'AGGREGATE'
+						WHEN 'f' THEN 'FUNCTION' 
+						END
                       , pp.oid::regprocedure
                        ) AS stmt
           FROM pg_proc pp

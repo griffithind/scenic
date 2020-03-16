@@ -1,7 +1,7 @@
 
 require "acceptance_helper"
 
-describe "User manages views" do
+describe "User manages functions" do
   it "handles simple functions" do
     successfully "rails generate scenic:function get_result"
     write_definition "get_result_v01", <<~SQL

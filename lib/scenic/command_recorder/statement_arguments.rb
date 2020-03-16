@@ -23,7 +23,7 @@ module Scenic
       end
 
       def remove_version
-        StatementArguments.new([view, options_without_version])
+        StatementArguments.new([object_name, options_without_version])
       end
 
       def to_a
