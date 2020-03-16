@@ -29,13 +29,14 @@ jobs:
     services:
       postgres:
         image: postgres:11
+        env:
+          POSTGRES_USER: "postgres"
+          POSTGRES_PASSWORD: "postgres"
         ports:
           - 5432:5432
 
     env:
       RAILS_VERSION: ${{ matrix.rails }}
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
       CI: "true"
 
     steps:
