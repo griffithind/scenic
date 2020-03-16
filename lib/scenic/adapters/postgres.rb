@@ -220,8 +220,9 @@ module Scenic
       # @return [void]
       def refresh_materialized_view(name, concurrently: false, cascade: false)
         raise_unless_materialized_views_supported
+
         if cascade
-          refresh_dependencies_for(name)
+          refresh_dependencies_for(name, concurrently: concurrently)
         end
 
         if concurrently
@@ -321,11 +322,12 @@ module Scenic
         end
       end
 
-      def refresh_dependencies_for(name)
+      def refresh_dependencies_for(name, concurrently: false)
         Scenic::Adapters::Postgres::RefreshDependencies.call(
           name,
           self,
           connection,
+          concurrently: concurrently,
         )
       end
     end

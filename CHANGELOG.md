@@ -1,9 +1,22 @@
-# News
+# Changelog
 
 The noteworthy changes for each Scenic version are included here. For a complete
-changelog, see the [CHANGELOG] for each version via the version links.
+changelog, see the [commits] for each version via the version links.
 
-[CHANGELOG]: https://github.com/scenic-views/scenic/commits/master
+[commits]: https://github.com/scenic-views/scenic/commits/master
+
+## [1.5.2] - February 6, 2020
+
+### Fixed
+
+- The schema statement `create_view` is now reversible when passed a `version`
+  argument.
+- Calling `refresh_materialized_view` with both `concurrently` and `cascade` set
+  to `true` now correctly cascades the concurrent refresh to dependent views.
+- File generation and lookup now operates correctly for schema-qualified names
+  like `warehouse.archived_posts`.
+
+[1.5.2]: https://github.com/scenic-views/scenic/compare/v1.5.1...v1.5.2
 
 ## [1.5.1] - February 10, 2019
 
