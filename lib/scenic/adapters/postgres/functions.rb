@@ -26,13 +26,14 @@ module Scenic
               pn.nspname as namespace,
               pg_get_functiondef(pp.oid) as definition
             FROM pg_proc pp
+              LEFT JOIN pg_depend pd ON pp.oid = pd.objid AND 'e' = pd.deptype
               LEFT JOIN pg_namespace pn ON pp.pronamespace = pn.oid
               LEFT JOIN pg_language pl ON pp.prolang = pl.oid
             WHERE
               pl.lanname IN ('sql','plpgsql')
-              AND pn.nspname NOT LIKE 'pg_%'
-              AND pn.nspname <> 'information_schema'
-          SQL
+              AND pn.nspname = ANY (current_schemas(false))
+              AND pd.objid IS NULL
+         SQL
         end
 
         def to_scenic_function(result)
