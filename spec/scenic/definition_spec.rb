@@ -46,7 +46,7 @@ module Scenic
 
       it "handles active record view prefix and suffixing" do
         with_affixed_tables(prefix: "foo_", suffix: "_bar") do
-          definition = Definition.new("foo_searches_bar", 1)
+          definition = Definition.new("foo_searches_bar", 1, :view)
 
           expect(definition.path).to eq "db/views/searches_v01.sql"
         end
