@@ -2,7 +2,7 @@ module Scenic
   # @api private
   class Definition
     def initialize(name, version, type)
-      @name = name
+      @name = name.to_s
       @version = version.to_i
       @type = type
     end
@@ -40,8 +40,10 @@ module Scenic
       end
     end
 
+    attr_reader :name
+
     def filename
-      "#{@name.to_s.tr('.', '_')}_v#{version}.sql"
+      "#{UnaffixedName.for(name).tr('.', '_')}_v#{version}.sql"
     end
   end
 end

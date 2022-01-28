@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: master
+    branches: main
   pull_request:
     branches: "*"
 
@@ -13,16 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ruby: ["2.7","2.4"]
-        rails: ["5.2", "6.0", "master"]
-        exclude:
-          - ruby: "2.4"
-            rails: "6.0"
-          - ruby: "2.4"
-            rails: "master"
-        include:
-          - rails: "master"
-            continue-on-error: true
+        ruby: ["2.7", "3.0", "3.1"]
+        rails: ["6.1", "7.0", "master"]
+        continue-on-error: [false]
 
     runs-on: ubuntu-latest
 
@@ -50,7 +43,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Ruby ${{ matrix.ruby }}
-        uses: ruby/setup-ruby@v1.51.1
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
 

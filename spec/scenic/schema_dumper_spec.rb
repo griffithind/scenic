@@ -26,7 +26,6 @@ describe Scenic::SchemaDumper, :db do
     expect(Search.first.haystack).to eq "needle"
   end
 
-
   it "dumps a create_function for a function in the database" do
     function_definition = <<~SQL
       CREATE FUNCTION greetings()
@@ -49,6 +48,22 @@ describe Scenic::SchemaDumper, :db do
     Search.connection.drop_function :greetings
 
     silence_stream(STDOUT) { eval(output) }
+  end
+
+  it "accurately dumps create view statements with a regular expression" do
+    view_definition = "SELECT 'needle'::text AS haystack WHERE 'a2z' ~ '\\d+'"
+    Search.connection.create_view :searches, sql_definition: view_definition
+    stream = StringIO.new
+
+    ActiveRecord::SchemaDumper.dump(Search.connection, stream)
+
+    output = stream.string
+    expect(output).to include "~ '\\\\d+'::text"
+
+    Search.connection.drop_view :searches
+    silence_stream(STDOUT) { eval(output) }
+
+    expect(Search.first.haystack).to eq "needle"
   end
 
   it "dumps a create_view for a materialized view in the database" do
@@ -77,6 +92,20 @@ describe Scenic::SchemaDumper, :db do
       expect(output).to include 'create_view "scenic.searches",'
 
       Search.connection.drop_view :'scenic.searches'
+    end
+  end
+
+  it "handles active record table name prefixes and suffixes" do
+    with_affixed_tables(prefix: "a_", suffix: "_z") do
+      view_definition = "SELECT 'needle'::text AS haystack"
+      Search.connection.create_view :a_searches_z, sql_definition: view_definition
+      stream = StringIO.new
+
+      ActiveRecord::SchemaDumper.dump(Search.connection, stream)
+
+      output = stream.string
+
+      expect(output).to include 'create_view "searches"'
     end
   end
 
@@ -121,7 +150,7 @@ describe Scenic::SchemaDumper, :db do
         "CREATE SCHEMA scenic; SET search_path TO scenic, public",
       )
       Search.connection.create_view 'scenic."search in a haystack"',
-        sql_definition: view_definition
+                                    sql_definition: view_definition
       stream = StringIO.new
 
       ActiveRecord::SchemaDumper.dump(Search.connection, stream)
