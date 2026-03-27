@@ -26,9 +26,8 @@ module Scenic
           scenic_function_names = scenic_functions.map(&:name)
 
           tsorted_functions(scenic_function_names).map do |function_name|
-            scenic_functions.find do |sf|
-              sf.name == function_name || sf.name == function_name.split(".").last
-            end
+            scenic_functions.find { |sf| sf.name == function_name } ||
+              scenic_functions.find { |sf| sf.name == function_name.split(".").last }
           end.compact
         end
 
