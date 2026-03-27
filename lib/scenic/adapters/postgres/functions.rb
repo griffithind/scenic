@@ -33,6 +33,7 @@ module Scenic
               pl.lanname IN ('sql','plpgsql')
               AND pn.nspname = ANY (current_schemas(false))
               AND pd.objid IS NULL
+            ORDER BY pn.nspname, pp.proname
           SQL
         end
 
