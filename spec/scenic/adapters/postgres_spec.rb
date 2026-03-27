@@ -270,8 +270,8 @@ module Scenic
           SQL
 
           expect(adapter.functions.map(&:name)).to eq [
-            "get_parent",
-            "get_child"
+            "get_child",
+            "get_parent"
           ]
         end
 
