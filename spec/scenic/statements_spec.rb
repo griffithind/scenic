@@ -147,7 +147,7 @@ module Scenic
       it "updates the materialized view with side-by-side mode" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new)
-          .with(:name, 3)
+          .with(:name, 3, :view)
           .and_return(definition)
 
         connection.update_view(
@@ -180,7 +180,7 @@ module Scenic
       it "raises an error is no_data and side_by_side are both set" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new)
-          .with(:name, 3)
+          .with(:name, 3, :view)
           .and_return(definition)
 
         expect do
@@ -195,7 +195,7 @@ module Scenic
       it "raises an error if not in a transaction" do
         definition = instance_double("Definition", to_sql: "definition")
         allow(Definition).to receive(:new)
-          .with(:name, 3)
+          .with(:name, 3, :view)
           .and_return(definition)
 
         expect do

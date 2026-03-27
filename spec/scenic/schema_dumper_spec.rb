@@ -38,7 +38,7 @@ describe Scenic::SchemaDumper, :db do
     Search.connection.create_function :greetings, sql_definition: function_definition
     stream = StringIO.new
 
-    ActiveRecord::SchemaDumper.dump(Search.connection, stream)
+    dump_schema(stream)
 
     output = stream.string
 
@@ -47,7 +47,7 @@ describe Scenic::SchemaDumper, :db do
 
     Search.connection.drop_function :greetings
 
-    silence_stream(STDOUT) { eval(output) }
+    silence_stream($stdout) { eval(output) } # standard:disable Security/Eval
   end
 
   it "accurately dumps create view statements with a regular expression" do
