@@ -166,7 +166,7 @@ describe Scenic::SchemaDumper, :db do
         "CREATE SCHEMA scenic; SET search_path TO scenic, public"
       )
       Search.connection.create_view 'scenic."search in a haystack"',
-                                    sql_definition: view_definition
+        sql_definition: view_definition
       stream = StringIO.new
 
       dump_schema(stream)

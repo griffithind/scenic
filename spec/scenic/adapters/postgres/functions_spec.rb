@@ -14,7 +14,7 @@ module Scenic
         SQL
 
         functions = Postgres::Functions.new(connection).all
-        first     = functions.first
+        first = functions.first
 
         expect(functions.size).to eq 1
         expect(first.name).to eq "get_test"

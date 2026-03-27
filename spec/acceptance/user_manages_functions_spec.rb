@@ -1,4 +1,3 @@
-
 require "acceptance_helper"
 
 describe "User manages functions" do

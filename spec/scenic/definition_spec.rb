@@ -30,7 +30,7 @@ module Scenic
         expect(definition.path).to eq expected
       end
 
-      it "returns a sql file in db/functions with padded version and view name"  do
+      it "returns a sql file in db/functions with padded version and view name" do
         expected = "db/functions/get_user_v01.sql"
 
         definition = Definition.new("get_user", 1, :function)

@@ -57,11 +57,11 @@ module Scenic
           adapter = Postgres.new
 
           function_definition = <<~SQL
-          CREATE FUNCTION greetings()
-          RETURNS text as $$
-          SELECT text 'hi';
-          $$
-          LANGUAGE sql;
+            CREATE FUNCTION greetings()
+            RETURNS text as $$
+            SELECT text 'hi';
+            $$
+            LANGUAGE sql;
           SQL
 
           adapter.create_function("greetings", function_definition)
@@ -125,11 +125,11 @@ module Scenic
           adapter = Postgres.new
 
           function_definition = <<~SQL
-          CREATE FUNCTION greetings()
-          RETURNS text as $$
-          SELECT text 'hi';
-          $$
-          LANGUAGE sql;
+            CREATE FUNCTION greetings()
+            RETURNS text as $$
+            SELECT text 'hi';
+            $$
+            LANGUAGE sql;
           SQL
 
           adapter.create_function("greetings", function_definition)
@@ -271,7 +271,7 @@ module Scenic
 
           expect(adapter.functions.map(&:name)).to eq [
             "get_parent",
-            "get_child",
+            "get_child"
           ]
         end
 
@@ -299,7 +299,7 @@ module Scenic
 
             expect(adapter.functions.map(&:name)).to eq [
               "get_parent",
-              "scenic.get_parent",
+              "scenic.get_parent"
             ]
           end
         end

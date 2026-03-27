@@ -33,27 +33,26 @@ module Scenic
               pl.lanname IN ('sql','plpgsql')
               AND pn.nspname = ANY (current_schemas(false))
               AND pd.objid IS NULL
-         SQL
+          SQL
         end
 
         def to_scenic_function(result)
           namespace, functionname = result.values_at "namespace", "functionname"
 
-          if namespace != "public"
-            namespaced_functionname =
-              "#{pg_identifier(namespace)}.#{pg_identifier(functionname)}"
+          namespaced_functionname = if namespace != "public"
+            "#{pg_identifier(namespace)}.#{pg_identifier(functionname)}"
           else
-            namespaced_functionname = pg_identifier(functionname)
+            pg_identifier(functionname)
           end
 
           Scenic::Function.new(
             name: namespaced_functionname,
-            definition: result["definition"].strip,
+            definition: result["definition"].strip
           )
         end
 
         def pg_identifier(name)
-          return name if name =~ /^[a-zA-Z_][a-zA-Z0-9_]*$/
+          return name if /^[a-zA-Z_][a-zA-Z0-9_]*$/.match?(name)
           pgconn.quote_ident(name)
         end
 

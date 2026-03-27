@@ -5,6 +5,7 @@ module Scenic
     # @api private
     class FunctionGenerator < Rails::Generators::NamedBase
       include Rails::Generators::Migration
+
       source_root File.expand_path("../templates", __FILE__)
 
       def create_functions_directory
@@ -25,12 +26,12 @@ module Scenic
         if creating_new_function? || destroying_initial_function?
           migration_template(
             "db/migrate/create_function.erb",
-            "db/migrate/create_#{function_name}.rb",
+            "db/migrate/create_#{function_name}.rb"
           )
         else
           migration_template(
             "db/migrate/update_function.erb",
-            "db/migrate/update_#{function_name}_to_version_#{version}.rb",
+            "db/migrate/update_#{function_name}_to_version_#{version}.rb"
           )
         end
       end
@@ -53,7 +54,7 @@ module Scenic
 
         def migration_class_name
           if creating_new_function?
-            "Create#{class_name.gsub('.', '')}"
+            "Create#{class_name.delete(".")}"
           else
             "Update#{class_name}ToVersion#{version}"
           end
@@ -69,13 +70,13 @@ module Scenic
       end
 
       def function_name
-        @function_name ||= file_name.gsub('.', '_')
+        @function_name ||= file_name.tr(".", "_")
       end
 
       private
 
       def functions_directory_path
-        @functions_directory_path ||= Rails.root.join(*%w(db functions))
+        @functions_directory_path ||= Rails.root.join(*%w[db functions])
       end
 
       def formatted_name

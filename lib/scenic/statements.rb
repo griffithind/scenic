@@ -200,7 +200,7 @@ module Scenic
       if version.present? && sql_definition.present?
         raise(
           ArgumentError,
-          "sql_definition and version cannot both be set",
+          "sql_definition and version cannot both be set"
         )
       end
 
@@ -248,14 +248,14 @@ module Scenic
       if version.blank? && sql_definition.blank?
         raise(
           ArgumentError,
-          "sql_definition or version must be specified",
+          "sql_definition or version must be specified"
         )
       end
 
       if version.present? && sql_definition.present?
         raise(
           ArgumentError,
-          "sql_definition and version cannot both be set",
+          "sql_definition and version cannot both be set"
         )
       end
 

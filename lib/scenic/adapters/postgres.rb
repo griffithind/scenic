@@ -292,36 +292,36 @@ module Scenic
       #
       # @return [void]
       def drop_function(name)
-        if name.to_s.include?('.')
-          args = name.to_s.split('.')
+        if name.to_s.include?(".")
+          args = name.to_s.split(".")
           domain = args[0]
           proname = args[1]
         else
-          domain = 'public'
+          domain = "public"
           proname = name.to_s
         end
 
         sql = <<~SQL
-          SELECT format('DROP %s %s;'
-                      , CASE pp.prokind
-						WHEN 'a' THEN 'AGGREGATE'
-						WHEN 'f' THEN 'FUNCTION'
-						END
-                      , pp.oid::regprocedure
-                       ) AS stmt
-          FROM pg_proc pp
-            LEFT JOIN pg_namespace pn ON pp.pronamespace = pn.oid
-            LEFT JOIN pg_language pl ON pp.prolang = pl.oid
-          WHERE
-            pl.lanname IN ('sql','plpgsql')
-            AND pn.nspname NOT LIKE 'pg_%'
-            AND pn.nspname <> 'information_schema'
-            AND  pp.proname = '#{proname}'
-            AND    pn.nspname = '#{domain}'
-          LIMIT 1
-          ;
+              SELECT format('DROP %s %s;'
+                          , CASE pp.prokind
+          WHEN 'a' THEN 'AGGREGATE'
+          WHEN 'f' THEN 'FUNCTION'
+          END
+                          , pp.oid::regprocedure
+                           ) AS stmt
+              FROM pg_proc pp
+                LEFT JOIN pg_namespace pn ON pp.pronamespace = pn.oid
+                LEFT JOIN pg_language pl ON pp.prolang = pl.oid
+              WHERE
+                pl.lanname IN ('sql','plpgsql')
+                AND pn.nspname NOT LIKE 'pg_%'
+                AND pn.nspname <> 'information_schema'
+                AND  pp.proname = '#{proname}'
+                AND    pn.nspname = '#{domain}'
+              LIMIT 1
+              ;
         SQL
-        statement = execute(sql)[0]['stmt']
+        statement = execute(sql)[0]["stmt"]
         execute statement
       end
 

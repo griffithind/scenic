@@ -75,7 +75,7 @@ describe "Reverting scenic schema function statements", :db do
   end
 
   def run_migration(migration, directions)
-    silence_stream(STDOUT) do
+    silence_stream($stdout) do
       Array.wrap(directions).each do |direction|
         migration.migrate(direction)
       end
