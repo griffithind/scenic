@@ -31,9 +31,35 @@ describe Scenic::Generators::ViewGenerator, :generator do
 
       run_generator ["aired_episode", "--materialized"]
       migration = migration_file(
-        "db/migrate/update_aired_episodes_to_version_2.rb",
+        "db/migrate/update_aired_episodes_to_version_2.rb"
       )
       expect(migration).to contain "materialized: true"
+    end
+  end
+
+  it "sets the no_data option when updating a materialized view" do
+    with_view_definition("aired_episodes", 1, "hello") do
+      allow(Dir).to receive(:entries).and_return(["aired_episodes_v01.sql"])
+
+      run_generator ["aired_episode", "--materialized", "--no-data"]
+      migration = migration_file(
+        "db/migrate/update_aired_episodes_to_version_2.rb"
+      )
+      expect(migration).to contain "materialized: { no_data: true }"
+      expect(migration).not_to contain "side_by_side"
+    end
+  end
+
+  it "sets the side-by-side option when updating a materialized view" do
+    with_view_definition("aired_episodes", 1, "hello") do
+      allow(Dir).to receive(:entries).and_return(["aired_episodes_v01.sql"])
+
+      run_generator ["aired_episode", "--materialized", "--side-by-side"]
+      migration = migration_file(
+        "db/migrate/update_aired_episodes_to_version_2.rb"
+      )
+      expect(migration).to contain "materialized: { side_by_side: true }"
+      expect(migration).not_to contain "no_data"
     end
   end
 
@@ -43,7 +69,7 @@ describe Scenic::Generators::ViewGenerator, :generator do
 
       run_generator ["aired_episode", "--replace"]
       migration = migration_file(
-        "db/migrate/update_aired_episodes_to_version_2.rb",
+        "db/migrate/update_aired_episodes_to_version_2.rb"
       )
       expect(migration).to contain "replace_view"
     end

@@ -43,7 +43,7 @@ module Scenic
     attr_reader :name
 
     def filename
-      "#{UnaffixedName.for(name).tr('.', '_')}_v#{version}.sql"
+      "#{UnaffixedName.for(name).tr(".", "_")}_v#{version}.sql"
     end
   end
 end

@@ -10,6 +10,10 @@ module Scenic
     end
 
     def views(stream)
+      dumpable_views_in_database = Scenic.database.views.reject do |view|
+        ignored?(view.name)
+      end
+
       if dumpable_views_in_database.any?
         stream.puts
       end
@@ -28,28 +32,8 @@ module Scenic
 
     private
 
-    def dumpable_views_in_database
-      @dumpable_views_in_database ||= Scenic.database.views.reject do |view|
-        ignored?(view.name)
-      end
-    end
-
     def dumpable_functions_in_database
       @dumpable_functions_in_database ||= Scenic.database.functions
-    end
-
-    unless ActiveRecord::SchemaDumper.private_instance_methods(false).include?(:ignored?)
-      # This method will be present in Rails 4.2.0 and can be removed then.
-      def ignored?(table_name)
-        ["schema_migrations", ignore_tables].flatten.any? do |ignored|
-          case ignored
-          when String then remove_prefix_and_suffix(table_name) == ignored
-          when Regexp then remove_prefix_and_suffix(table_name) =~ ignored
-          else
-            raise StandardError, "ActiveRecord::SchemaDumper.ignore_tables accepts an array of String and / or Regexp values."
-          end
-        end
-      end
     end
   end
 end

@@ -8,6 +8,7 @@ module Scenic
     # @api private
     class ModelGenerator < Rails::Generators::NamedBase
       include Scenic::Generators::Materializable
+
       source_root File.expand_path("templates", __dir__)
 
       def invoke_rails_model_generator
@@ -15,7 +16,7 @@ module Scenic
           [file_path.singularize],
           options.merge(
             fixture_replacement: false,
-            migration: false,
+            migration: false
           )
       end
 
@@ -34,23 +35,14 @@ module Scenic
       private
 
       def evaluate_template(source)
-        source  = File.expand_path(find_in_source_paths(source.to_s))
+        source = File.expand_path(find_in_source_paths(source.to_s))
         context = instance_eval("binding", __FILE__, __LINE__)
 
-        if ERB.instance_method(:initialize).parameters.assoc(:key) # Ruby 2.6+
-          erb = ERB.new(
-            ::File.binread(source),
-            trim_mode: "-",
-            eoutvar: "@output_buffer",
-          )
-        else
-          erb = ERB.new(
-            ::File.binread(source),
-            nil,
-            "-",
-            "@output_buffer",
-          )
-        end
+        erb = ERB.new(
+          ::File.binread(source),
+          trim_mode: "-",
+          eoutvar: "@output_buffer"
+        )
 
         erb.result(context)
       end

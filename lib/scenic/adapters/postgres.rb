@@ -5,6 +5,10 @@ require_relative "postgres/indexes"
 require_relative "postgres/views"
 require_relative "postgres/functions"
 require_relative "postgres/refresh_dependencies"
+require_relative "postgres/side_by_side"
+require_relative "postgres/index_creation"
+require_relative "postgres/index_migration"
+require_relative "postgres/temporary_name"
 
 module Scenic
   # Scenic database adapters.
@@ -15,7 +19,7 @@ module Scenic
   module Adapters
     # An adapter for managing Postgres views.
     #
-    # These methods are used interally by Scenic and are not intended for direct
+    # These methods are used internally by Scenic and are not intended for direct
     # use. Methods that alter database schema are intended to be called via
     # {Statements}, while {#refresh_materialized_view} is called via
     # {Scenic.database}.
@@ -135,7 +139,7 @@ module Scenic
       # @param sql_definition The SQL schema that defines the materialized view.
       # @param no_data [Boolean] Default: false. Set to true to create
       #   materialized view without running the associated query. You will need
-      #   to perform a non-concurrent refresh to populate with data.
+      #   to perform a refresh to populate with data.
       #
       # This is typically called in a migration via {Statements#create_view}.
       #
@@ -148,8 +152,8 @@ module Scenic
 
         execute <<-SQL
   CREATE MATERIALIZED VIEW #{quote_table_name(name)} AS
-  #{sql_definition.rstrip.chomp(';')}
-  #{'WITH NO DATA' if no_data};
+  #{sql_definition.rstrip.chomp(";")}
+  #{"WITH NO DATA" if no_data};
         SQL
       end
 
@@ -165,18 +169,27 @@ module Scenic
       # @param sql_definition The SQL schema for the updated view.
       # @param no_data [Boolean] Default: false. Set to true to create
       #   materialized view without running the associated query. You will need
-      #   to perform a non-concurrent refresh to populate with data.
+      #   to perform a refresh to populate with data.
+      # @param side_by_side [Boolean] Default: false. Set to true to create the
+      #   new version under a different name and atomically swap them, limiting
+      #   the time that a view is inaccessible at the cost of doubling disk usage
       #
       # @raise [MaterializedViewsNotSupportedError] if the version of Postgres
       #   in use does not support materialized views.
       #
       # @return [void]
-      def update_materialized_view(name, sql_definition, no_data: false)
+      def update_materialized_view(name, sql_definition, no_data: false, side_by_side: false)
         raise_unless_materialized_views_supported
 
-        IndexReapplication.new(connection: connection).on(name) do
-          drop_materialized_view(name)
-          create_materialized_view(name, sql_definition, no_data: no_data)
+        if side_by_side
+          SideBySide
+            .new(adapter: self, name: name, definition: sql_definition)
+            .update
+        else
+          IndexReapplication.new(connection: connection).on(name) do
+            drop_materialized_view(name)
+            create_materialized_view(name, sql_definition, no_data: no_data)
+          end
         end
       end
 
@@ -204,7 +217,10 @@ module Scenic
       #   refreshed without locking the view for select but requires that the
       #   table have at least one unique index that covers all rows. Attempts to
       #   refresh concurrently without a unique index will raise a descriptive
-      #   error.
+      #   error. This option is ignored if the view is not populated, as it
+      #   would cause an error to be raised by Postgres. Default: false.
+      # @param cascade [Boolean] Whether to refresh dependent materialized
+      #   views. Default: false.
       #
       # @raise [MaterializedViewsNotSupportedError] if the version of Postgres
       #   in use does not support materialized views.
@@ -216,17 +232,22 @@ module Scenic
       #   Scenic.database.refresh_materialized_view(:search_results)
       # @example Concurrent refresh
       #   Scenic.database.refresh_materialized_view(:posts, concurrently: true)
+      # @example Cascade refresh
+      #   Scenic.database.refresh_materialized_view(:posts, cascade: true)
       #
       # @return [void]
       def refresh_materialized_view(name, concurrently: false, cascade: false)
         raise_unless_materialized_views_supported
 
+        if concurrently
+          raise_unless_concurrent_refresh_supported
+        end
+
         if cascade
           refresh_dependencies_for(name, concurrently: concurrently)
         end
 
-        if concurrently
-          raise_unless_concurrent_refresh_supported
+        if concurrently && populated?(name)
           execute "REFRESH MATERIALIZED VIEW CONCURRENTLY #{quote_table_name(name)};"
         else
           execute "REFRESH MATERIALIZED VIEW #{quote_table_name(name)};"
@@ -282,9 +303,9 @@ module Scenic
 
         sql = <<~SQL
           SELECT format('DROP %s %s;'
-                      , CASE pp.prokind 
+                      , CASE pp.prokind
 						WHEN 'a' THEN 'AGGREGATE'
-						WHEN 'f' THEN 'FUNCTION' 
+						WHEN 'f' THEN 'FUNCTION'
 						END
                       , pp.oid::regprocedure
                        ) AS stmt
@@ -304,14 +325,41 @@ module Scenic
         execute statement
       end
 
+      # True if supplied relation name is populated.
+      #
+      # @param name The name of the relation
+      #
+      # @raise [MaterializedViewsNotSupportedError] if the version of Postgres
+      #   in use does not support materialized views.
+      #
+      # @return [boolean]
+      def populated?(name)
+        raise_unless_materialized_views_supported
+
+        schemaless_name = name.to_s.split(".").last
+
+        sql = "SELECT relispopulated FROM pg_class WHERE relname = '#{schemaless_name}'"
+        relations = execute(sql)
+
+        if relations.count.positive?
+          relations.first["relispopulated"].in?(["t", true])
+        else
+          false
+        end
+      end
+
+      # A decorated ActiveRecord connection object with some Scenic-specific
+      # methods. Not intended for direct use outside of the Postgres adapter.
+      #
+      # @api private
+      def connection
+        Connection.new(connectable.connection)
+      end
+
       private
 
       attr_reader :connectable
       delegate :execute, :quote_table_name, to: :connection
-
-      def connection
-        Connection.new(connectable.connection)
-      end
 
       def raise_unless_materialized_views_supported
         unless connection.supports_materialized_views?
@@ -330,7 +378,7 @@ module Scenic
           name,
           self,
           connection,
-          concurrently: concurrently,
+          concurrently: concurrently
         )
       end
     end

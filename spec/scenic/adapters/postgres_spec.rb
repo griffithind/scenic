@@ -19,7 +19,7 @@ module Scenic
 
           adapter.create_materialized_view(
             "greetings",
-            "SELECT text 'hi' AS greeting",
+            "SELECT text 'hi' AS greeting"
           )
 
           view = adapter.views.first
@@ -33,7 +33,7 @@ module Scenic
           adapter.create_materialized_view(
             "greetings",
             "SELECT text 'hi' AS greeting; \n",
-            no_data: true,
+            no_data: true
           )
 
           view = adapter.views.first
@@ -102,7 +102,7 @@ module Scenic
 
           adapter.create_materialized_view(
             "greetings",
-            "SELECT text 'hi' AS greeting",
+            "SELECT text 'hi' AS greeting"
           )
           adapter.drop_materialized_view("greetings")
 
@@ -161,7 +161,7 @@ module Scenic
           adapter.refresh_materialized_view(
             :tests,
             cascade: true,
-            concurrently: true,
+            concurrently: true
           )
         end
 
@@ -184,6 +184,14 @@ module Scenic
             expect {
               adapter.refresh_materialized_view(:tests, concurrently: true)
             }.to raise_error e
+          end
+
+          it "falls back to non-concurrent refresh if not populated" do
+            adapter = Postgres.new
+            adapter.create_materialized_view(:testing, "SELECT unnest('{1, 2}'::int[])", no_data: true)
+
+            expect { adapter.refresh_materialized_view(:testing, concurrently: true) }
+              .not_to raise_error
           end
         end
       end
@@ -212,10 +220,10 @@ module Scenic
           SQL
 
           expect(adapter.views.map(&:name)).to eq [
-            "parents",
             "children",
+            "parents",
             "people",
-            "people_with_names",
+            "people_with_names"
           ]
         end
 
@@ -229,13 +237,13 @@ module Scenic
 
             ActiveRecord::Base.connection.execute <<-SQL
               CREATE SCHEMA scenic;
-              CREATE VIEW scenic.parents AS SELECT text 'Maarten' AS name;
+              CREATE VIEW scenic.more_parents AS SELECT text 'Maarten' AS name;
               SET search_path TO scenic, public;
             SQL
 
             expect(adapter.views.map(&:name)).to eq [
               "parents",
-              "scenic.parents",
+              "scenic.more_parents"
             ]
           end
         end
@@ -294,6 +302,85 @@ module Scenic
               "scenic.get_parent",
             ]
           end
+        end
+      end
+
+      describe "#populated?" do
+        it "returns false if a materialized view is not populated" do
+          adapter = Postgres.new
+
+          ActiveRecord::Base.connection.execute <<-SQL
+            CREATE MATERIALIZED VIEW greetings AS
+            SELECT text 'hi' AS greeting
+            WITH NO DATA
+          SQL
+
+          expect(adapter.populated?("greetings")).to be false
+        end
+
+        it "returns true if a materialized view is populated" do
+          adapter = Postgres.new
+
+          ActiveRecord::Base.connection.execute <<-SQL
+            CREATE MATERIALIZED VIEW greetings AS
+            SELECT text 'hi' AS greeting
+          SQL
+
+          expect(adapter.populated?("greetings")).to be true
+        end
+
+        it "strips out the schema from table_name" do
+          adapter = Postgres.new
+
+          ActiveRecord::Base.connection.execute <<-SQL
+            CREATE MATERIALIZED VIEW greetings AS
+            SELECT text 'hi' AS greeting
+            WITH NO DATA
+          SQL
+
+          expect(adapter.populated?("public.greetings")).to be false
+        end
+
+        it "raises an exception if the version of PostgreSQL is too old" do
+          connection = double("Connection", supports_materialized_views?: false)
+          connectable = double("Connectable", connection: connection)
+          adapter = Postgres.new(connectable)
+          err = Scenic::Adapters::Postgres::MaterializedViewsNotSupportedError
+
+          expect { adapter.populated?("greetings") }.to raise_error err
+        end
+      end
+
+      describe "#update_materialized_view" do
+        it "updates the definition of a materialized view in place" do
+          adapter = Postgres.new
+          create_materialized_view("hi", "SELECT 'hi' AS greeting")
+          new_definition = "SELECT 'hello' AS greeting"
+
+          adapter.update_materialized_view("hi", new_definition)
+          result = adapter.connection.execute("SELECT * FROM hi").first["greeting"]
+
+          expect(result).to eq "hello"
+        end
+
+        it "updates the definition of a materialized view side by side", :silence do
+          adapter = Postgres.new
+          create_materialized_view("hi", "SELECT 'hi' AS greeting")
+          new_definition = "SELECT 'hello' AS greeting"
+
+          adapter.update_materialized_view("hi", new_definition, side_by_side: true)
+          result = adapter.connection.execute("SELECT * FROM hi").first["greeting"]
+
+          expect(result).to eq "hello"
+        end
+
+        it "raises an exception if the version of PostgreSQL is too old" do
+          connection = double("Connection", supports_materialized_views?: false)
+          connectable = double("Connectable", connection: connection)
+          adapter = Postgres.new(connectable)
+
+          expect { adapter.create_materialized_view("greetings", "select 1") }
+            .to raise_error Postgres::MaterializedViewsNotSupportedError
         end
       end
     end

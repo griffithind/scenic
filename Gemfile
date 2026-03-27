@@ -3,12 +3,12 @@ source "https://rubygems.org"
 # Specify your gem's dependencies in scenic.gemspec
 gemspec
 
-rails_version = ENV.fetch("RAILS_VERSION", "6.1")
+rails_version = ENV.fetch("RAILS_VERSION", "8.0")
 
-if rails_version == "master"
-  rails_constraint = { github: "rails/rails" }
+rails_constraint = if rails_version == "main"
+  {github: "rails/rails"}
 else
-  rails_constraint = "~> #{rails_version}.0"
+  "~> #{rails_version}.0"
 end
 
 gem "rails", rails_constraint

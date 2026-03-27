@@ -6,7 +6,7 @@ module Scenic::Generators
     before do
       allow(ViewGenerator).to receive(:new)
         .and_return(
-          instance_double("Scenic::Generators::ViewGenerator").as_null_object,
+          instance_double("Scenic::Generators::ViewGenerator").as_null_object
         )
     end
 
@@ -30,6 +30,14 @@ module Scenic::Generators
       model_definition = file("app/models/active_user.rb")
 
       expect(model_definition).to contain("self.refresh")
+      expect(model_definition).to have_correct_syntax
+    end
+
+    it "adds a populated? method to materialized models" do
+      run_generator ["active_user", "--materialized"]
+      model_definition = file("app/models/active_user.rb")
+
+      expect(model_definition).to contain("self.populated?")
       expect(model_definition).to have_correct_syntax
     end
   end
